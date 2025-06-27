@@ -1,0 +1,38 @@
+name: Java Maven CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [ '8', '11' ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.java }}
+          cache: 'maven'
+
+      - name: Build with Maven
+        run: mvn clean package --batch-mode
+
+      - name: Show build artifact
+        run: ls -l target/*.jar
+
+      - name: Archive build logs
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: maven-logs
+          path: target/surefire-reports/*.txt
